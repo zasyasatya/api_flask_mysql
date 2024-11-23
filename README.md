@@ -31,8 +31,8 @@ Please clone this project and make sure to follow all instruction below:
 ## Installation
 ### Step 1: Clone the repository
 ```
-git clone https://github.com/firmangel8/api_flask.git
-cd api_flask
+git clone https://github.com/zasyasatya/api_flask_mysql.git
+cd api_flask_mysql
 ```
 
 ### Step 2: Installation package
