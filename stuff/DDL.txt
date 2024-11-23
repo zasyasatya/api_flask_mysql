@@ -1,0 +1,107 @@
+-- Membuat database
+CREATE DATABASE IF NOT EXISTS toko_management;
+USE toko_management;
+
+
+-- Function untuk generate sales_id dengan format unik
+DELIMITER //
+CREATE FUNCTION generate_sales_id()
+RETURNS VARCHAR(10)
+DETERMINISTIC
+BEGIN
+    DECLARE prefix VARCHAR(3) DEFAULT 'SL-';
+    DECLARE unique_id VARCHAR(7);
+    SET unique_id = LPAD(CONVERT((SELECT IFNULL(MAX(CONVERT(SUBSTRING(sales_id, 4), UNSIGNED)), 0) + 1 FROM TX_Sales), CHAR), 7, '0');
+    RETURN CONCAT(prefix, unique_id);
+END;
+//
+DELIMITER ;
+
+-- Tabel Master Data (MD)
+-- Tabel produk
+CREATE TABLE MD_Product (
+    product_id INT PRIMARY KEY AUTO_INCREMENT,
+    product_name VARCHAR(100) NOT NULL,
+    category_id INT,
+    price DECIMAL(10, 2) NOT NULL,
+    stock INT DEFAULT 0,
+    image_path VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Tabel pelanggan
+CREATE TABLE MD_User (
+    user_id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) NOT NULL,
+    password VARCHAR(100) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    role ENUM('admin', 'customer', 'employee') DEFAULT 'customer',
+    phone VARCHAR(15),
+    email VARCHAR(100),
+    address TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabel Reference (REF)
+-- Tabel kategori produk
+CREATE TABLE REF_Category (
+    category_id INT PRIMARY KEY AUTO_INCREMENT,
+    category_name VARCHAR(100) NOT NULL,
+    description TEXT
+);
+
+-- Tabel Transaction (TX)
+-- Tabel penjualan
+CREATE TABLE TX_Sales (
+    sales_id VARCHAR(10) PRIMARY KEY,
+    user_id INT,
+    sales_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    total_amount DECIMAL(10, 2),
+    FOREIGN KEY (user_id) REFERENCES MD_User(user_id) ON DELETE SET NULL
+);
+
+-- Trigger untuk mengisi sales_id otomatis dengan function
+DELIMITER //
+CREATE TRIGGER before_insert_sales
+BEFORE INSERT ON TX_Sales
+FOR EACH ROW
+BEGIN
+    SET NEW.sales_id = generate_sales_id();
+END;
+//
+DELIMITER ;
+
+-- Tabel detail penjualan
+CREATE TABLE TX_Sales_Detail (
+    sales_detail_id INT PRIMARY KEY AUTO_INCREMENT,
+    sales_id VARCHAR(10),
+    product_id INT,
+    quantity INT NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    subtotal DECIMAL(10, 2),
+    FOREIGN KEY (sales_id) REFERENCES TX_Sales(sales_id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES MD_Product(product_id) ON DELETE SET NULL
+);
+
+-- Tabel Log (LG)
+-- Tabel log perubahan harga produk
+CREATE TABLE LG_Price_Change_Log (
+    log_id INT PRIMARY KEY AUTO_INCREMENT,
+    product_id INT,
+    old_price DECIMAL(10, 2),
+    new_price DECIMAL(10, 2),
+    change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES MD_Product(product_id) ON DELETE CASCADE
+);
+
+-- Tabel Mapping (MP)
+-- Tabel mapping produk dan kategori
+CREATE TABLE MP_Product_Category (
+    mapping_id INT PRIMARY KEY AUTO_INCREMENT,
+    product_id INT,
+    category_id INT,
+    FOREIGN KEY (product_id) REFERENCES MD_Product(product_id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES REF_Category(category_id) ON DELETE CASCADE
+);
+
