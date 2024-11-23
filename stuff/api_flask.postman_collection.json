@@ -1,9 +1,9 @@
 {
 	"info": {
-		"_postman_id": "a6c05306-0924-462e-9b36-b9ed9b5e4970",
+		"_postman_id": "9f853b03-cecf-4bbf-9ae9-0904c22ec3c7",
 		"name": "api_flask",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "3140692"
+		"_exporter_id": "16616810"
 	},
 	"item": [
 		{
@@ -106,22 +106,22 @@
 			]
 		},
 		{
-			"name": "books",
+			"name": "products",
 			"item": [
 				{
-					"name": "/api/v1/books/read",
+					"name": "/api/v1/products/read",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{flask_local}}/api/v1/books/read",
+							"raw": "{{flask_local}}/api/v1/products/read",
 							"host": [
 								"{{flask_local}}"
 							],
 							"path": [
 								"api",
 								"v1",
-								"books",
+								"products",
 								"read"
 							]
 						}
@@ -129,7 +129,27 @@
 					"response": []
 				},
 				{
-					"name": "/api/v1/books/create",
+					"name": "/api/v1/products/detail/:id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{flask_local}}/api/v1/products/read",
+							"host": [
+								"{{flask_local}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"products",
+								"read"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "api/v1/products/create",
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -164,7 +184,42 @@
 					"response": []
 				},
 				{
-					"name": "/api/v1/books/upload",
+					"name": "api/v1/products/update/:id",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "title",
+									"value": "test",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "delete books",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{flask_local}}/api/v1/books/create",
+							"host": [
+								"{{flask_local}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"books",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api/v1/products/upload",
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -198,42 +253,6 @@
 								"v1",
 								"books",
 								"upload"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "/api/v1/books/update/:id",
-					"request": {
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "title",
-									"value": "update title books updated",
-									"type": "text"
-								},
-								{
-									"key": "description",
-									"value": "update description updated",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "{{flask_local}}/api/v1/books/update/30",
-							"host": [
-								"{{flask_local}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"books",
-								"update",
-								"30"
 							]
 						}
 					},
