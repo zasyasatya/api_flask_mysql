@@ -23,7 +23,7 @@ Please clone this project and make sure to follow all instruction below:
 
 ## Preparation
 **Import Database Dump**
-- Please run DDL Script `stuff/DDL.txt` and DML Script `stuff/DDL.txt`
+- Please run DDL Script `stuff/DDL.txt` and DML Script `stuff/DML.txt`
 
 **Import Postman Collection**
 - Please import the collection in the postman, the file located in the directory `stuff/api_flask.postman_collection.json`

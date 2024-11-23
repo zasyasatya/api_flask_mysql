@@ -13,7 +13,7 @@ INSERT INTO MD_Product (product_name, category_id, price, stock) VALUES
     ('T-Shirt', 3, 15.00, 200),
     ('Sofa', 4, 450.00, 20);
 
--- Data dummy untuk MD_User
+-- Data dummy untuk MD_User -- Pass: admin123
 INSERT INTO MD_User (username, password, name, role, phone, email, address) VALUES 
 ('john_doe', '$2a$12$vBsevJIEHf71ZlQqC6BxN.SFXUdM9k6Y48yLX2IPJJ4OK5szm0MHm', 'John Doe', 'customer', '081234567890', 'user1@example.com', '123 Elm Street'),
 ('jane_smith', '$2a$12$vBsevJIEHf71ZlQqC6BxN.SFXUdM9k6Y48yLX2IPJJ4OK5szm0MHm', 'Jane Smith', 'employee', '081987654321', 'user2@example.com', '456 Oak Avenue'),

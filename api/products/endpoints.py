@@ -258,6 +258,6 @@ def upload():
         
         return jsonify({"message": "ok", "datas": "uploaded", "file_path": file_path}), 200
 
-    return jsonify({"err_message": "Can't upload image"}), 400
+    return jsonify({"message": "Can't upload image"}), 400
 
 

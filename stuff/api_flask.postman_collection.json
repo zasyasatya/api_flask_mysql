@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "9f853b03-cecf-4bbf-9ae9-0904c22ec3c7",
+		"_postman_id": "59392bb7-6c2b-4182-ae7b-49db02c67d48",
 		"name": "api_flask",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "16616810"
@@ -19,12 +19,12 @@
 							"formdata": [
 								{
 									"key": "username",
-									"value": "jean_doe",
+									"value": "alice_johnson",
 									"type": "text"
 								},
 								{
 									"key": "password",
-									"value": "ZJeanPassword!",
+									"value": "admin123",
 									"type": "text"
 								}
 							]
@@ -54,12 +54,41 @@
 							"formdata": [
 								{
 									"key": "username",
-									"value": "jean_doe",
+									"value": "putu_zasya",
+									"description": "required",
 									"type": "text"
 								},
 								{
 									"key": "password",
-									"value": "ZJeanPassword!",
+									"value": "admin123",
+									"description": "required",
+									"type": "text"
+								},
+								{
+									"key": "name",
+									"value": "Putu Zasya",
+									"description": "required",
+									"type": "text"
+								},
+								{
+									"key": "role",
+									"value": "admin",
+									"description": "required",
+									"type": "text"
+								},
+								{
+									"key": "phone",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "address",
+									"value": "",
 									"type": "text"
 								}
 							]
@@ -110,11 +139,18 @@
 			"item": [
 				{
 					"name": "/api/v1/products/read",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "GET",
 						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
 						"url": {
-							"raw": "{{flask_local}}/api/v1/products/read",
+							"raw": "{{flask_local}}/api/v1/products/read?limit=5&page=1",
 							"host": [
 								"{{flask_local}}"
 							],
@@ -123,6 +159,16 @@
 								"v1",
 								"products",
 								"read"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "5"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								}
 							]
 						}
 					},
@@ -134,7 +180,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{flask_local}}/api/v1/products/read",
+							"raw": "{{flask_local}}/api/v1/products/detail/1",
 							"host": [
 								"{{flask_local}}"
 							],
@@ -142,7 +188,8 @@
 								"api",
 								"v1",
 								"products",
-								"read"
+								"detail",
+								"1"
 							]
 						}
 					},
@@ -157,26 +204,39 @@
 							"mode": "formdata",
 							"formdata": [
 								{
-									"key": "title",
-									"value": "test",
+									"key": "product_name",
+									"value": "Roma Kelapa",
+									"description": "required",
 									"type": "text"
 								},
 								{
-									"key": "description",
-									"value": "delete books",
+									"key": "price",
+									"value": "12500",
+									"description": "required",
+									"type": "text"
+								},
+								{
+									"key": "category_id",
+									"value": "2",
+									"description": "required -> REF_Category",
+									"type": "text"
+								},
+								{
+									"key": "stock",
+									"value": "15",
 									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{flask_local}}/api/v1/books/create",
+							"raw": "{{flask_local}}/api/v1/products/create",
 							"host": [
 								"{{flask_local}}"
 							],
 							"path": [
 								"api",
 								"v1",
-								"books",
+								"products",
 								"create"
 							]
 						}
@@ -186,33 +246,44 @@
 				{
 					"name": "api/v1/products/update/:id",
 					"request": {
-						"method": "POST",
+						"method": "PUT",
 						"header": [],
 						"body": {
 							"mode": "formdata",
 							"formdata": [
 								{
-									"key": "title",
-									"value": "test",
+									"key": "product_name",
+									"value": "Smartphone update",
 									"type": "text"
 								},
 								{
-									"key": "description",
-									"value": "delete books",
+									"key": "price",
+									"value": "12500",
+									"type": "text"
+								},
+								{
+									"key": "category_id",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "stock",
+									"value": "12",
 									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{flask_local}}/api/v1/books/create",
+							"raw": "{{flask_local}}/api/v1/products/update/1",
 							"host": [
 								"{{flask_local}}"
 							],
 							"path": [
 								"api",
 								"v1",
-								"books",
-								"create"
+								"products",
+								"update",
+								"1"
 							]
 						}
 					},
@@ -227,31 +298,26 @@
 							"mode": "formdata",
 							"formdata": [
 								{
-									"key": "title",
-									"value": "test",
-									"type": "text"
-								},
-								{
-									"key": "description",
-									"value": "delete books",
+									"key": "product_id",
+									"value": "1",
 									"type": "text"
 								},
 								{
 									"key": "file",
 									"type": "file",
-									"src": "/Users/pagedev/Downloads/money-flat.png"
+									"src": "/C:/Users/Zasya/Pictures/hidroponik.jpeg"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{flask_local}}/api/v1/books/upload",
+							"raw": "{{flask_local}}/api/v1/products/upload",
 							"host": [
 								"{{flask_local}}"
 							],
 							"path": [
 								"api",
 								"v1",
-								"books",
+								"products",
 								"upload"
 							]
 						}
@@ -261,19 +327,19 @@
 				{
 					"name": "/api/v1/products/delete/:id",
 					"request": {
-						"method": "GET",
+						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{flask_local}}/api/v1/books/delete/30",
+							"raw": "{{flask_local}}/api/v1/products/delete/5",
 							"host": [
 								"{{flask_local}}"
 							],
 							"path": [
 								"api",
 								"v1",
-								"books",
+								"products",
 								"delete",
-								"30"
+								"5"
 							]
 						}
 					},

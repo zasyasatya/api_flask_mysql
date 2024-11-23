@@ -16,7 +16,7 @@ def login():
     password = request.form['password']
 
     if not username or not password:
-        return jsonify({"msg": "Username and password are required"}), 400
+        return jsonify({"message": "Username and password are required"}), 400
 
     connection = get_connection()
     cursor = connection.cursor(dictionary=True)
@@ -29,7 +29,7 @@ def login():
     print(bcrypt.check_password_hash(user.get('password'), password))
 
     if not user or not bcrypt.check_password_hash(user.get('password'), password):
-        return jsonify({"msg": "Bad username or password"}), 401
+        return jsonify({"message": "Wrong username or password"}), 401
 
     access_token = create_access_token(
         identity = username
@@ -54,19 +54,33 @@ def register():
     phone = request.form['phone']
     email = request.form['email']
     address = request.form['address']
-    # To hash a password
+    
+    # Check if the username or email already exists in the database
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    # Cek apakah produk dengan nama yang sama sudah ada
+    select_query = "SELECT * FROM MD_user WHERE username = %s OR email = %s"
+    cursor.execute(select_query, (username, email))
+    existing_product = cursor.fetchone()
+
+    if existing_product:
+        # Jika produk sudah ada, return 409 Conflict
+        return jsonify({"message": "User already exists.", "datas": None}), 409
+    # To hash the password
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 
-    connection = get_connection()
+    # Now, reinitialize the cursor for the INSERT query
     cursor = connection.cursor()
     insert_query = "INSERT INTO md_user (username, password, name, role, phone, email, address) values (%s, %s, %s, %s, %s, %s, %s)"
     request_insert = (username, hashed_password, name, role, phone, email, address)
     cursor.execute(insert_query, request_insert)
     connection.commit()
     cursor.close()
+
     new_id = cursor.lastrowid
     if new_id:
-        return jsonify({"message": "OK",
-                        "description": "User created",
-                        "username": username}), 201
-    return jsonify({"message": "Failed, cant register user"}), 501
+        return jsonify({"message": "User Created", "datas": {"username": username}}), 201
+    
+    return jsonify({"message": "Failed, can't register user"}), 501
+
