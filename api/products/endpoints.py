@@ -6,64 +6,78 @@ import glob
 
 products_endpoints = Blueprint('products', __name__)
 UPLOAD_FOLDER = "img"
-
 # Endpoint untuk membaca daftar produk
 @products_endpoints.route('/read', methods=['GET'])
 def read():
     """Routes for module get list products with pagination"""
-    connection = get_connection()
-    cursor = connection.cursor(dictionary=True)
-
-    # Ambil parameter pagination dari query string
+    
     try:
-        page = int(request.args.get('page', 1))  # Default page adalah 1
-        limit = int(request.args.get('limit', 10))  # Default limit adalah 10
-    except ValueError:
-        return jsonify({"message": "Invalid pagination parameters", "datas": None}), 400
+        # Mendapatkan koneksi dari pool dan cursor menggunakan konteks manajer
+        with get_connection() as connection:
+            with connection.cursor(dictionary=True) as cursor:
+                
+                # Ambil parameter pagination dari query string
+                try:
+                    page = int(request.args.get('page', 1))  # Default page adalah 1
+                    limit = int(request.args.get('limit', 10))  # Default limit adalah 10
+                    search = request.args.get('search', ' ')  # Default search adalah empty string
+                    sort_column = request.args.get('sort_column', 'product_name')  # Default sort_column
+                    sort_direction = request.args.get('sort_direction', 'ASC')  # Default sort_direction
+                except ValueError:
+                    return jsonify({"message": "Invalid pagination parameters", "datas": None}), 400
 
-    if page < 1 or limit < 1:
-        return jsonify({"message": "Page and limit must be positive integers", "datas": None}), 400
+                if page < 1 or limit < 1:
+                    return jsonify({"message": "Page and limit must be positive integers", "datas": None}), 400
 
-    # Hitung offset untuk query SQL
-    offset = (page - 1) * limit
+                # Hitung offset untuk query SQL
+                # offset = (page - 1) * limit
 
-    # Hitung total produk (untuk total_pages)
-    count_query = "SELECT COUNT(*) as total FROM MD_Product WHERE is_deleted = FALSE"
-    cursor.execute(count_query)
-    total_products = cursor.fetchone()["total"]
+                print(page
+                ,limit
+                ,search
+                ,sort_column
+                ,sort_direction)
 
-    # Ambil data produk dengan batasan limit dan offset
-    select_query = """
-        SELECT * 
-        FROM MD_Product 
-        WHERE is_deleted = FALSE
-        LIMIT %s OFFSET %s
-    """
-    cursor.execute(select_query, (limit, offset))
-    results = cursor.fetchall()
+                # Hitung total produk (untuk total_pages)
+                count_query = "SELECT COUNT(*) as total FROM MD_Product WHERE is_deleted = FALSE"
+                cursor.execute(count_query)
+                total_products = cursor.fetchone()["total"]
 
-    # Tutup koneksi database
-    cursor.close()
+                # Call Stored Procedure
+                cursor.callproc('sp_get_product_data', [limit, page, search, sort_column, sort_direction])
 
-    # Hitung total halaman
-    total_pages = (total_products + limit - 1) // limit  # Pembulatan ke atas
+                results = cursor.stored_results
 
-    # Menambahkan informasi jumlah data pada halaman saat ini
-    current_data_count = len(results)
+                for result in cursor.stored_results():
+                    # If the stored procedure returns a result set, fetch all rows
+                    results = result.fetchall()
+                    print(results)
+  
 
-    # Struktur respons
-    response = {
-        "message": "Data successfully retrieved",
-        "datas": results,
-        "pagination": {
-            "page": page,
-            "limit": limit,
-            "total_pages": total_pages,
-            "total_items": total_products,
-            "current_data_count": current_data_count  # Menambahkan jumlah data yang ada di halaman ini
-        }
-    }
-    return jsonify(response), 200
+                # Hitung total halaman
+                total_pages = (total_products + limit - 1) // limit  # Pembulatan ke atas
+
+                # Menambahkan informasi jumlah data pada halaman saat ini
+                current_data_count = len(results)
+
+                # Struktur respons
+                response = {
+                    "message": "Data successfully retrieved",
+                    "datas": results,
+                    "pagination": {
+                        "page": page,
+                        "limit": limit,
+                        "total_pages": total_pages,
+                        "total_items": total_products,
+                        "current_data_count": current_data_count  # Menambahkan jumlah data yang ada di halaman ini
+                    }
+                }
+                return jsonify(response), 200
+    
+    except Exception as e:
+        # Tangani error dan pastikan koneksi ditutup meskipun terjadi error
+        return jsonify({"message": "Error occurred", "error": str(e)}), 500
+
 
 
 
