@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD DataTable</title>
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
+    <!-- Custom CSS -->
+    <style>
+        table.dataTable thead th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        table.dataTable tbody tr:nth-child(odd) {
+            background-color: #f9f9f9;
+        }
+        table.dataTable tbody tr:nth-child(even) {
+            background-color: #e9ecef;
+        }
+        table.dataTable tbody tr:hover {
+            background-color: #d4edda;
+        }
+    </style>
+</head>
+<body>
+    <table id="example" class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Product Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+            </tr>
+        </thead>
+    </table>
+
+    <!-- jQuery and DataTables Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
