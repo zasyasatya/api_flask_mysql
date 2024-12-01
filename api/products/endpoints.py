@@ -3,6 +3,30 @@ from flask import Blueprint, jsonify, request
 from helper.db_helper import get_connection
 from helper.form_validation import get_form_data
 import glob
+import re
+
+def validate_inputs(limit, page, search, sort_column, sort_direction):
+    try:
+        limit = int(limit)  # Konversi ke integer
+        page = int(page)    # Konversi ke integer
+    except ValueError:
+        raise ValueError("Limit and page must be numeric integers.")
+    
+    # Validasi sort_direction
+    if sort_direction not in ['asc', 'desc']:
+        raise ValueError("Sort direction must be 'ASC' or 'DESC'.")
+    
+    # Validasi sort_column
+    allowed_sort_columns = ['product_name', 'price', 'stock', 'created_at', 'updated_at', 'category_id']
+    if sort_column not in allowed_sort_columns:
+        raise ValueError("Invalid sort column.")
+    
+    # Validasi search
+    if len(search) > 255 or not re.match(r'^[a-zA-Z0-9\s]*$', search):
+        raise ValueError("Search term is invalid, only receive alphabet and numerical parameter")
+
+    return limit, page, search, sort_column, sort_direction
+
 
 products_endpoints = Blueprint('products', __name__)
 UPLOAD_FOLDER = "img"
@@ -39,9 +63,27 @@ def read():
                 ,sort_direction)
 
                 # Hitung total produk (untuk total_pages)
-                count_query = "SELECT COUNT(*) as total FROM MD_Product WHERE is_deleted = FALSE"
-                cursor.execute(count_query)
+                count_query = """
+                    SELECT COUNT(*) as total
+                    FROM MD_Product product
+                    LEFT JOIN REF_Category category ON product.category_id = category.category_id
+                    WHERE product.is_deleted = FALSE
+                    AND (
+                        product.product_name LIKE CONCAT('%', %s, '%') OR
+                        CAST(product.price AS CHAR) LIKE CONCAT('%', %s, '%') OR
+                        CAST(product.stock AS CHAR) LIKE CONCAT('%', %s, '%') OR
+                        DATE_FORMAT(product.created_at, '%Y-%m-%d') LIKE CONCAT('%', %s, '%') OR
+                        DATE_FORMAT(product.updated_at, '%Y-%m-%d') LIKE CONCAT('%', %s, '%') OR
+                        category.category_name LIKE CONCAT('%', %s, '%')
+                    )
+                """
+
+                # Eksekusi query
+                cursor.execute(count_query, (search, search, search, search, search, search))
                 total_products = cursor.fetchone()["total"]
+
+                # Sanitize parameter
+                limit, page, search, sort_column, sort_direction = validate_inputs(limit, page, search, sort_column, sort_direction)
 
                 # Call Stored Procedure
                 cursor.callproc('sp_get_product_data', [limit, page, search, sort_column, sort_direction])
@@ -79,47 +121,59 @@ def read():
         return jsonify({"message": "Error occurred", "error": str(e)}), 500
 
 
-
-
 @products_endpoints.route('/create', methods=['POST'])
 def create():
     """Routes for module create a product"""
-    required = get_form_data(["product_name", "price", "category_id"])  # Ambil data wajib
-    product_name = required["product_name"]
-    price = request.form['price']
-    category_id = request.form['category_id']
+    # Ambil data wajib
+    required = get_form_data(["product_name", "price", "category_id"])
+    product_name = required.get("product_name")
+    price = request.form.get('price')
+    category_id = request.form.get('category_id')
     stock = request.form.get('stock', 0)  # Default 0 jika tidak ada
+    supplier = request.form.get('supplier', '')  # Default kosong jika tidak ada
 
-    # Cek validasi untuk harga dan stok
+    # Validasi input
     if not product_name or not price or not category_id:
         return jsonify({"message": "Product name, price, and category_id are required.", "datas": None}), 400
 
-    connection = get_connection()
-    cursor = connection.cursor(dictionary=True)
+    try:
+        # Koneksi ke database
+        connection = get_connection()
+        cursor = connection.cursor(dictionary=True)
 
-    # Cek apakah produk dengan nama yang sama sudah ada
-    select_query = "SELECT * FROM MD_Product WHERE product_name = %s"
-    cursor.execute(select_query, (product_name,))
-    existing_product = cursor.fetchone()
+        # Cek apakah produk dengan nama yang sama sudah ada
+        select_query = "SELECT * FROM MD_Product WHERE product_name = %s"
+        cursor.execute(select_query, (product_name,))
+        existing_product = cursor.fetchone()
 
-    if existing_product:
-        # Jika produk sudah ada, return 409 Conflict
-        return jsonify({"message": "Product already exists.", "datas": None}), 409
+        if existing_product:
+            # Jika produk sudah ada, return 409 Conflict
+            return jsonify({"message": "Product already exists.", "datas": None}), 409
 
-    # Jika produk belum ada, lakukan insert
-    insert_query = """
-        INSERT INTO MD_Product (product_name, price, category_id, stock) 
-        VALUES (%s, %s, %s, %s)
-    """
-    request_insert = (product_name, price, category_id, stock)
-    cursor.execute(insert_query, request_insert)
-    connection.commit()  # Commit changes to the database
-    cursor.close()
-    new_id = cursor.lastrowid  # Get the newly inserted product's ID
+        # Panggil Stored Procedure
+        cursor.callproc('sp_create_product_data', [product_name, price, category_id, stock, supplier])
 
-    if new_id:
-        return jsonify({"message": "Inserted", "datas": {"product_id": new_id, "product_name": product_name}}), 201
-    return jsonify({"message": "Can't Insert Data"}), 500
+        # Ambil hasil dari prosedur tersimpan jika ada
+        results = []
+        for result in cursor.stored_results():
+            rows = result.fetchall()
+            for row in rows:
+                # Pastikan data bisa diserialisasi ke JSON
+                results.append({key: str(value) if isinstance(value, (bytes, bytearray)) else value for key, value in row.items()})
+
+        connection.commit()  # Commit perubahan ke database
+
+    except mysql.connector.Error as err:
+        return jsonify({"message": f"Database error: {err}", "datas": None}), 500
+    except Exception as e:
+        return jsonify({"message": f"Internal error: {e}", "datas": None}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+    if results:
+        return jsonify({"message": "Product created successfully.", "datas": results}), 201
+    return jsonify({"message": "Product created but no data returned.", "datas": None}), 201
 
 # Endpoint untuk menampilkana detail produk berdasarkan id
 @products_endpoints.route('/detail/<int:product_id>', methods=['GET'])

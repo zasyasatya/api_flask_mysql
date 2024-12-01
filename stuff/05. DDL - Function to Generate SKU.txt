@@ -1,0 +1,31 @@
+DELIMITER $$
+
+DROP FUNCTION IF EXISTS fn_generate_sku$$
+
+CREATE FUNCTION fn_generate_sku(
+    product_name VARCHAR(255),
+    category_id INT,
+    supplier VARCHAR(255)
+) 
+RETURNS VARCHAR(255)
+DETERMINISTIC
+BEGIN
+    DECLARE sku VARCHAR(255);
+    
+    -- Generate SKU by concatenating product name, category ID, current date (formatted), and supplier
+    SET sku = UPPER (
+        CONCAT(
+            LEFT(REPLACE(product_name, ' ', ''), 3),     -- First 3 characters of product_name, remove spaces
+            '-', 
+            category_id,                                  -- category_id
+            '-', 
+            DATE_FORMAT(CURDATE(), '%Y%m%d'),             -- Current date in format YYYYMMDD
+            '-', 
+            LEFT(REPLACE(supplier, ' ', ''), 3)           -- First 3 characters of supplier, remove spaces
+        )
+    );
+    
+    RETURN sku;
+END$$
+
+DELIMITER ;

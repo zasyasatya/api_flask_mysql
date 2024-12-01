@@ -1,0 +1,33 @@
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS sp_create_product_data$$
+
+CREATE PROCEDURE sp_create_product_data(
+    IN product_name VARCHAR(255),
+    IN price INT,
+    IN category_id INT,
+    IN stock INT,
+    IN supplier VARCHAR(255)
+)
+BEGIN
+    DECLARE generated_sku VARCHAR(255);
+    DECLARE new_product_id INT;
+
+    -- Generate SKU using the fn_generate_sku function
+    SET generated_sku = fn_generate_sku(product_name, category_id, supplier);
+
+    -- Insert new product data into the MD_Product table
+    INSERT INTO MD_Product (product_name, price, category_id, stock, sku, supplier)
+    VALUES (product_name, price, category_id, stock, generated_sku, supplier);
+
+    -- Get the last inserted ID
+    SET new_product_id = LAST_INSERT_ID();
+
+    -- Select the newly inserted product data
+    SELECT * 
+    FROM MD_Product
+    WHERE product_id = new_product_id;
+
+END$$
+
+DELIMITER ;

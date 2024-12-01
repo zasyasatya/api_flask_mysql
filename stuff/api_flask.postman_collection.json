@@ -150,7 +150,7 @@
 							"formdata": []
 						},
 						"url": {
-							"raw": "{{flask_local}}/api/v1/products/read?limit=5&page=1",
+							"raw": "{{flask_local}}/api/v1/products/read?limit=3&page=1&search=1&sort_column=stock&sort_direction=desc",
 							"host": [
 								"{{flask_local}}"
 							],
@@ -163,11 +163,23 @@
 							"query": [
 								{
 									"key": "limit",
-									"value": "5"
+									"value": "3"
 								},
 								{
 									"key": "page",
 									"value": "1"
+								},
+								{
+									"key": "search",
+									"value": "1"
+								},
+								{
+									"key": "sort_column",
+									"value": "stock"
+								},
+								{
+									"key": "sort_direction",
+									"value": "desc"
 								}
 							]
 						}
@@ -205,25 +217,30 @@
 							"formdata": [
 								{
 									"key": "product_name",
-									"value": "Roma Kelapa",
+									"value": "test beras 5",
 									"description": "required",
 									"type": "text"
 								},
 								{
 									"key": "price",
-									"value": "12500",
+									"value": "8000",
 									"description": "required",
 									"type": "text"
 								},
 								{
 									"key": "category_id",
-									"value": "2",
+									"value": "10",
 									"description": "required -> REF_Category",
 									"type": "text"
 								},
 								{
 									"key": "stock",
 									"value": "15",
+									"type": "text"
+								},
+								{
+									"key": "supplier",
+									"value": "PT. Zasya",
 									"type": "text"
 								}
 							]

@@ -1,0 +1,85 @@
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS sp_get_product_data$$
+
+CREATE PROCEDURE sp_get_product_data(
+    IN `limit` INT,
+    IN `page` INT,
+    IN `search` VARCHAR(255),
+    IN `sort_column` VARCHAR(255),
+    IN `sort_direction` VARCHAR(4)
+)
+BEGIN
+    DECLARE offset_value INT;
+
+    -- Calculate OFFSET
+    SET offset_value = (`page` - 1) * `limit`;
+
+    -- Query for filtering, sorting, and pagination
+    IF `sort_direction` = 'ASC' THEN
+        SELECT 
+            product.product_name, 
+            product.price, 
+            product.stock, 
+            product.created_at, 
+            product.updated_at, 
+            category.category_name
+        FROM MD_Product product
+        LEFT JOIN REF_Category category 
+            ON product.category_id = category.category_id
+        WHERE product.is_deleted = FALSE
+        AND (
+            product.product_name LIKE CONCAT('%', `search`, '%')
+            OR product.price LIKE CONCAT('%', `search`, '%')
+            OR product.stock LIKE CONCAT('%', `search`, '%')
+            OR product.created_at LIKE CONCAT('%', `search`, '%')
+            OR product.updated_at LIKE CONCAT('%', `search`, '%')
+            OR category.category_name LIKE CONCAT('%', `search`, '%')
+        )
+        ORDER BY 
+            CASE 
+                WHEN `sort_column` = 'product_name' THEN product.product_name
+                WHEN `sort_column` = 'price' THEN CAST(product.price AS DECIMAL)
+                WHEN `sort_column` = 'stock' THEN CAST(product.stock AS DECIMAL)
+                WHEN `sort_column` = 'created_at' THEN product.created_at
+                WHEN `sort_column` = 'updated_at' THEN product.updated_at
+                WHEN `sort_column` = 'category_name' THEN category.category_name
+                ELSE product.product_name
+            END ASC
+        LIMIT `limit` OFFSET offset_value;
+    ELSE
+        SELECT 
+            product.product_name, 
+            product.price, 
+            product.stock, 
+            product.created_at, 
+            product.updated_at, 
+            category.category_name
+        FROM MD_Product product
+        INNER JOIN REF_Category category 
+            ON product.category_id = category.category_id
+        WHERE product.is_deleted = FALSE
+        AND (
+            product.product_name LIKE CONCAT('%', `search`, '%')
+            OR product.price LIKE CONCAT('%', `search`, '%')
+            OR product.stock LIKE CONCAT('%', `search`, '%')
+            OR product.created_at LIKE CONCAT('%', `search`, '%')
+            OR product.updated_at LIKE CONCAT('%', `search`, '%')
+            OR category.category_name LIKE CONCAT('%', `search`, '%')
+        )
+        ORDER BY 
+            CASE 
+                WHEN `sort_column` = 'product_name' THEN product.product_name
+                WHEN `sort_column` = 'price' THEN CAST(product.price AS DECIMAL)
+                WHEN `sort_column` = 'stock' THEN CAST(product.stock AS DECIMAL)
+                WHEN `sort_column` = 'created_at' THEN product.created_at
+                WHEN `sort_column` = 'updated_at' THEN product.updated_at
+                WHEN `sort_column` = 'category_name' THEN category.category_name
+                ELSE product.product_name
+            END DESC
+        LIMIT `limit` OFFSET offset_value;
+    END IF;
+
+END$$
+
+DELIMITER ;
